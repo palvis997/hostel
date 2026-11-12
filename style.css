@@ -1,0 +1,338 @@
+/* =====================================================================
+   Kirinyaga University | Smart Campus Accommodation & Facility Management
+   Custom rules layered over Bootstrap 5.3. Sections:
+   1 Tokens   2 Base   3 Bootstrap overrides   4 Navigation
+   5 Hero and banners   6 Homepage carousel   7 Hostel cards (3D)
+   8 Room selection   9 Dashboards   10 Sign-in pages   11 Footer
+   12 Print and motion
+   ===================================================================== */
+
+/* 1. Tokens */
+:root {
+  --kyu-green-dark: #0f3f22;
+  --kyu-green: #14532d;
+  --kyu-green-light: #15803d;
+  --kyu-gold: #f59e0b;
+  --kyu-gold-soft: #fcd34d;
+  --kyu-surface: #f4f6f5;
+  --kyu-ink: #1e293b;
+  --kyu-radius: 1.1rem;
+}
+
+/* 2. Base */
+html { scroll-behavior: smooth; }
+body { display: flex; flex-direction: column; min-height: 100vh; background: var(--kyu-surface); color: var(--kyu-ink); }
+main { flex: 1 0 auto; }
+img { object-fit: cover; }
+[id] { scroll-margin-top: 90px; }
+.img-failed { visibility: hidden; }
+.img-placeholder { display: block; background: linear-gradient(135deg, var(--kyu-green), var(--kyu-green-light)); }
+
+/* 3. Bootstrap overrides: brand green replaces Bootstrap blue */
+.bg-kyu { background-color: var(--kyu-green) !important; }
+.btn-primary {
+  --bs-btn-bg: var(--kyu-green);
+  --bs-btn-border-color: var(--kyu-green);
+  --bs-btn-hover-bg: var(--kyu-green-dark);
+  --bs-btn-hover-border-color: var(--kyu-green-dark);
+  --bs-btn-active-bg: var(--kyu-green-dark);
+  --bs-btn-active-border-color: var(--kyu-green-dark);
+  --bs-btn-disabled-bg: var(--kyu-green);
+  --bs-btn-disabled-border-color: var(--kyu-green);
+  --bs-btn-focus-shadow-rgb: 20, 83, 45;
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--kyu-green);
+  --bs-btn-border-color: var(--kyu-green);
+  --bs-btn-hover-bg: var(--kyu-green);
+  --bs-btn-hover-border-color: var(--kyu-green);
+  --bs-btn-active-bg: var(--kyu-green);
+  --bs-btn-active-border-color: var(--kyu-green);
+  --bs-btn-focus-shadow-rgb: 20, 83, 45;
+}
+.nav-pills { --bs-nav-pills-link-active-bg: var(--kyu-green); }
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus { border-color: var(--kyu-green-light); box-shadow: 0 0 0 .2rem rgba(20, 83, 45, .2); }
+.form-check-input:checked { background-color: var(--kyu-green); border-color: var(--kyu-green); }
+.input-group-text { background: #f8fafc; color: var(--kyu-green); }
+.card { border: 0; box-shadow: 0 2px 10px rgba(15, 23, 42, .07); }
+.table thead th { white-space: nowrap; }
+
+/* 4. Navigation */
+.navbar { --bs-navbar-active-color: var(--kyu-gold-soft); }
+.brand-logo { height: 44px; width: auto; padding: 2px 4px; border-radius: 6px; background: #fff; }
+.brand-sub { display: block; font-size: .72rem; letter-spacing: .03em; opacity: .85; }
+.navbar .nav-link { position: relative; }
+.navbar .nav-link.active { font-weight: 600; }
+.navbar .nav-link.active::after {
+  content: '';
+  position: absolute;
+  left: .75rem;
+  right: .75rem;
+  bottom: .1rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--kyu-gold-soft);
+}
+
+/* 5. Hero and banners. Every hero carries the required dark gradient overlay. */
+.kyu-hero { position: relative; overflow: hidden; color: #fff; }
+.kyu-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.kyu-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.6));
+}
+.kyu-hero-content { position: relative; z-index: 2; }
+.kyu-hero-title {
+  margin-bottom: .5rem;
+  font-size: clamp(1.6rem, 3.2vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.15;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, .45);
+}
+.kyu-hero-subtitle { font-size: clamp(1rem, 1.6vw, 1.15rem); color: #f8fafc; text-shadow: 0 1px 6px rgba(0, 0, 0, .45); }
+.kyu-banner {
+  display: flex;
+  align-items: flex-end;
+  height: 360px;
+  margin-bottom: 2rem;
+  border-radius: 1.25rem;
+  box-shadow: 0 14px 35px rgba(15, 23, 42, .18);
+}
+.kyu-banner .kyu-hero-content { padding: 2rem 2.25rem; }
+
+/* 6. Homepage carousel (full width, fixed height) */
+.kyu-carousel { height: 560px; overflow: hidden; background: var(--kyu-green-dark); }
+.kyu-carousel .carousel-inner,
+.kyu-carousel .carousel-item { height: 100%; }
+.kyu-caption {
+  left: 50%;
+  right: auto;
+  bottom: 3.5rem;
+  z-index: 2;
+  width: min(92%, 820px);
+  padding: 0;
+  transform: translateX(-50%);
+  text-shadow: 0 2px 12px rgba(0, 0, 0, .5);
+}
+.kyu-caption-title {
+  font-size: clamp(1.7rem, 4vw, 3rem);
+  font-weight: 800;
+  line-height: 1.12;
+  color: #fff;
+}
+.kyu-caption-text { font-size: clamp(1rem, 1.7vw, 1.25rem); color: #f8fafc; margin-bottom: 0; }
+.kyu-caption .btn { text-shadow: none; }
+.kyu-carousel .carousel-indicators { z-index: 3; margin-bottom: .75rem; }
+.kyu-carousel .carousel-control-prev,
+.kyu-carousel .carousel-control-next { z-index: 3; width: 8%; }
+@media (max-width: 767.98px) {
+  .kyu-carousel { height: 460px; }
+  .kyu-caption { bottom: 3.25rem; }
+  .kyu-banner { height: 260px; }
+  .kyu-banner .kyu-hero-content { padding: 1.5rem; }
+}
+
+/* 7. Hostel cards with a 3D tilt (driven by script.js) */
+.section-title { font-weight: 700; color: var(--kyu-green); }
+.section-title::after {
+  content: '';
+  display: block;
+  width: 56px;
+  height: 4px;
+  margin-top: .35rem;
+  border-radius: 2px;
+  background: var(--kyu-gold);
+}
+.hostel-tilt { perspective: 1100px; height: 100%; }
+.hostel-card {
+  height: 100%;
+  border-radius: var(--kyu-radius);
+  transform-style: preserve-3d;
+  transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transition: transform .35s ease, box-shadow .35s ease;
+  box-shadow: 0 10px 25px rgba(15, 63, 34, .12);
+}
+.hostel-tilt:hover .hostel-card { box-shadow: 0 22px 42px rgba(15, 63, 34, .22); }
+.hostel-card-media {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--kyu-radius) var(--kyu-radius) 0 0;
+  transform: translateZ(28px);
+}
+.hostel-card-img { display: block; width: 100%; height: 300px; object-fit: cover; }
+.price-tag {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: .35rem .8rem;
+  border-radius: 999px;
+  background: var(--kyu-gold);
+  color: #1f2937;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .2);
+}
+.price-tag small { font-weight: 500; }
+.feature { transition: transform .2s ease; }
+.feature:hover { transform: translateY(-3px); }
+.feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: .75rem;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: var(--kyu-green);
+  font-size: 1.5rem;
+}
+@media (max-width: 575.98px) { .hostel-card-img { height: 240px; } }
+
+/* 8. Room selection cards, amenity badges and the live fee breakdown */
+.room-input:checked + .room-card { border-color: var(--kyu-green); box-shadow: 0 0 0 4px rgba(20, 83, 45, .15); }
+.room-input:focus-visible + .room-card { outline: 3px solid var(--kyu-gold); outline-offset: 2px; }
+.room-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: 2px solid transparent;
+  border-radius: var(--kyu-radius);
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .07);
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.room-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(15, 23, 42, .12); }
+.room-card.is-disabled { opacity: .55; cursor: not-allowed; }
+.room-card.is-disabled:hover { transform: none; }
+.room-card-media { position: relative; display: block; }
+.room-card-img { display: block; width: 100%; height: 170px; object-fit: cover; }
+.room-card-status { position: absolute; top: 10px; left: 10px; }
+.room-card-body { display: flex; flex-direction: column; flex: 1; padding: 1rem 1.1rem; }
+.amenity-list { display: flex; flex-wrap: wrap; gap: .35rem; }
+.amenity-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .2rem .6rem;
+  border-radius: 999px;
+  background: #ecfdf3;
+  color: var(--kyu-green);
+  font-size: .75rem;
+  font-weight: 600;
+}
+.fee-summary { position: sticky; top: 96px; }
+@media (max-width: 991.98px) { .fee-summary { position: static; } }
+.fee-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: .55rem 0;
+  border-bottom: 1px dashed #e2e8f0;
+}
+.fee-list dt { font-weight: 500; color: #64748b; }
+.fee-list dd { margin: 0; font-weight: 600; text-align: right; }
+.fee-total { padding: .9rem 1rem; border-radius: .9rem; background: #f0fdf4; }
+
+/* 9. Dashboards: KPI cards, allocated-room photo, charts */
+.stat-card { border-left: 5px solid var(--kyu-gold) !important; }
+.stat-card .display-6 { font-weight: 700; color: var(--kyu-green); }
+.kpi-card { display: flex; align-items: center; gap: 1rem; border-left: 5px solid var(--accent); }
+.kpi-card.accent-green { --accent: #15803d; --accent-soft: #dcfce7; }
+.kpi-card.accent-blue { --accent: #0369a1; --accent-soft: #e0f2fe; }
+.kpi-card.accent-amber { --accent: #b45309; --accent-soft: #fef3c7; }
+.kpi-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 1.5rem;
+}
+.kpi-value { font-size: 2rem; font-weight: 800; line-height: 1.1; color: var(--kyu-ink); }
+.allocation-img { display: block; width: 100%; height: 170px; object-fit: cover; }
+.chart-box { position: relative; height: 300px; }
+
+/* 10. Sign-in and registration pages (split screen) */
+body.admin-login { background: #e2e8f0; }
+.auth-wrap { padding: 2rem 0 3rem; }
+.auth-split {
+  max-width: 1040px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, .18);
+}
+.auth-hero-col { display: flex; }
+.auth-hero { flex: 1 1 auto; min-height: 640px; }
+.auth-hero-content { position: absolute; left: 0; right: 0; bottom: 0; padding: 2.5rem; }
+.auth-eyebrow { font-size: .8rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--kyu-gold-soft); }
+.auth-form { padding: 2.5rem; }
+.role-pill {
+  display: inline-block;
+  padding: .25rem .85rem;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.role-student { background: #dcfce7; color: var(--kyu-green); }
+.role-admin { background: #0f172a; color: var(--kyu-gold-soft); }
+.btn-admin { background: #0f172a; border-color: #0f172a; color: #fff; }
+.btn-admin:hover { background: #1e293b; border-color: #1e293b; color: #fff; }
+@media (max-width: 991.98px) {
+  .auth-hero { min-height: 280px; }
+  .auth-form { padding: 1.75rem; }
+}
+
+/* 11. Footer */
+.footer-contact a { color: var(--kyu-gold-soft); text-decoration: none; }
+.footer-contact a:hover { color: #fff; text-decoration: underline; }
+
+/* 12. Print (reports) and reduced motion */
+@media print {
+  .navbar, footer, .no-print, .kyu-carousel { display: none !important; }
+  body { background: #fff; }
+  .card { box-shadow: none; }
+  .chart-box { height: 260px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .carousel-fade .carousel-item,
+  .feature,
+  .room-card,
+  .hostel-card { transition: none !important; }
+}
+
+/* 13. Payment evidence, rejection notices and administrative reports */
+.evidence-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: .85rem;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.kpi-card.accent-red { --accent: #b91c1c; --accent-soft: #fee2e2; }
+.kpi-card.accent-slate { --accent: #334155; --accent-soft: #e2e8f0; }
+.rejection-card { background: #fff5f5; border-width: 2px; }
+@media print {
+  .report-table th, .report-table td { font-size: 9.5pt; }
+  .kpi-card { box-shadow: none; }
+}
