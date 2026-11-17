@@ -4,9 +4,9 @@ SPI 2301 Web Application Development II, semester project.
 
 ## Setup on XAMPP
 
-1. Copy the `hostel` folder to `C:\xampp\htdocs\hostel`.
+1. Copy the `hostel` folder to `C:\xamp\htdocs\hostel` (or your XAMPP `htdocs` folder).
 2. Start Apache and MySQL in the XAMPP control panel.
-3. In phpMyAdmin, import `database.sql`. It drops and recreates every table, so importing it again resets the sample data. Import it again after this update: the room applications table is now called `applications` and has payment and rejection columns.
+3. In phpMyAdmin, create a database named `smart_campus`, select it in the sidebar, then import `database.sql`. The SQL file does not create or select a database, so it can also be imported into a provider-assigned database name. Importing it drops and recreates every table, resetting its data.
 4. Open http://localhost/hostel/
 
 Database connection settings are at the top of `db.php`.
@@ -52,6 +52,20 @@ Change these passwords before the system goes live.
 
 Hostel cards read their photo from the `image` column of the `hostels` table. Bedroom photos are optional: add `room-2bed.jpg` (rooms of one or two beds) and `room-4bed.jpg` (rooms of three or more beds) to `assets/images/` and they are used automatically.
 
-## Hosting
+## Hosting on Render
 
-Set the database details in `db.php`, or use the `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME` and `DB_PORT` environment variables. The InfinityFree and Render deployment steps are in the project report.
+The repository includes a `Dockerfile` for the PHP application. Connect the GitHub repository to Render as a Docker Web Service, use the `main` branch, and leave the build and start commands blank.
+
+The app requires an external MySQL database; Render's built-in database is PostgreSQL and is not compatible with this project. Create a MySQL database with a provider that accepts connections from Render, select that database in its import tool, then import `database.sql`. Do not use the local XAMPP database host (`localhost` or `127.0.0.1`) in Render.
+
+Add these environment variables to the Render service using the values supplied by the MySQL provider:
+
+- `DB_HOST`
+- `DB_PORT`
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASS`
+
+The database settings can also be configured directly at the top of `db.php`. Do not commit production credentials. The SQL import drops and recreates the application's tables, so do not import it again after the site has real user data unless you intend to reset that data.
+
+Before making the site public, replace or remove the demo accounts and change their passwords.

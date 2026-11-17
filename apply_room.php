@@ -5,16 +5,18 @@ require_login('student');
 
 $uid = (int)$_SESSION['user_id'];
 $errors = [];
+$semesterChoice = $_SERVER['REQUEST_METHOD'] === 'POST' ? post('semester') : '';
 
 try {
     $profile = fetch_user_profile($conn, $uid);
     $gender = (string)($profile['gender'] ?? '');
     $emailOk = is_kyu_email((string)($profile['email'] ?? ''));
 
-    $activeStmt = $conn->prepare("SELECT COUNT(*) AS n FROM applications WHERE user_id = ? AND status IN ('Pending', 'Approved')");
+    $activeStmt = $conn->prepare("SELECT DISTINCT semester FROM applications WHERE user_id = ? AND status IN ('Pending', 'Approved')");
     $activeStmt->bind_param('i', $uid);
     $activeStmt->execute();
-    $hasActive = (int)$activeStmt->get_result()->fetch_assoc()['n'] > 0;
+    $activeSemesters = array_column($activeStmt->get_result()->fetch_all(MYSQLI_ASSOC), 'semester');
+    $hasActive = $semesterChoice !== '' && in_array($semesterChoice, $activeSemesters, true);
 } catch (mysqli_sql_exception $ex) {
     error_log($ex->getMessage());
     exit('Something went wrong. Please try again later.');
@@ -22,13 +24,11 @@ try {
 
 $hostelFilter = (int)($_GET['hostel'] ?? 0);
 $selectedRoom = (int)($_GET['room_id'] ?? 0);
-$semesterChoice = '';
 $paymentMethod = '';
 $paymentReference = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $selectedRoom = (int)($_POST['room_id'] ?? 0);
-    $semesterChoice = post('semester');
     $paymentMethod = post('payment_method');
     $paymentReference = strtoupper(post('payment_reference'));
 
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = KYU_EMAIL_MESSAGE . '.';
     }
     if ($hasActive) {
-        $errors[] = 'You already have a pending or approved application.';
+        $errors[] = 'You already have a pending or approved application for this semester.';
     }
     if ($selectedRoom <= 0) {
         $errors[] = 'Please choose a room.';
@@ -63,29 +63,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $conn->begin_transaction();
 
-            // One transaction code cannot back two active applications.
-            $duplicateStmt = $conn->prepare("SELECT COUNT(*) AS n FROM applications WHERE payment_reference = ? AND status IN ('Pending', 'Approved')");
-            $duplicateStmt->bind_param('s', $paymentReference);
-            $duplicateStmt->execute();
-            if ((int)$duplicateStmt->get_result()->fetch_assoc()['n'] > 0) {
-                $errors[] = 'This payment reference is already attached to another active application.';
+            // Serialize submissions by the student's account so concurrent requests
+            // cannot create more than one active application for the same semester.
+            $userLock = $conn->prepare('SELECT user_id FROM users WHERE user_id = ? FOR UPDATE');
+            $userLock->bind_param('i', $uid);
+            $userLock->execute();
+            $userLock->get_result()->free();
+            $activeCheck = $conn->prepare("SELECT COUNT(*) AS n FROM applications
+                WHERE user_id = ? AND semester = ? AND status IN ('Pending', 'Approved')");
+            $activeCheck->bind_param('is', $uid, $semesterChoice);
+            $activeCheck->execute();
+            if ((int)$activeCheck->get_result()->fetch_assoc()['n'] > 0) {
+                $errors[] = 'You already have a pending or approved application for this semester.';
             }
 
-            $roomStmt = $conn->prepare("SELECT r.capacity, r.status, h.gender, h.fee_per_semester,
-                    (SELECT COUNT(*) FROM applications a WHERE a.room_id = r.room_id AND a.status = 'Approved') AS occupied
-                FROM rooms r
-                JOIN hostels h ON h.hostel_id = r.hostel_id
-                WHERE r.room_id = ?");
-            $roomStmt->bind_param('i', $selectedRoom);
-            $roomStmt->execute();
-            $room = $roomStmt->get_result()->fetch_assoc();
+            // One transaction code cannot back two active applications.
+            if (!$errors) {
+                $duplicateStmt = $conn->prepare("SELECT COUNT(*) AS n FROM applications WHERE payment_reference = ? AND status IN ('Pending', 'Approved')");
+                $duplicateStmt->bind_param('s', $paymentReference);
+                $duplicateStmt->execute();
+                if ((int)$duplicateStmt->get_result()->fetch_assoc()['n'] > 0) {
+                    $errors[] = 'This payment reference is already attached to another active application.';
+                }
+            }
 
-            if (!$room) {
-                $errors[] = 'The selected room does not exist.';
-            } elseif ($room['status'] !== 'Available' || (int)$room['occupied'] >= (int)$room['capacity']) {
-                $errors[] = 'That room is no longer available.';
-            } elseif (!eligible_for((string)$room['gender'], $gender)) {
-                $errors[] = 'That hostel is not open to your gender.';
+            $room = null;
+            if (!$errors) {
+                $roomStmt = $conn->prepare("SELECT r.capacity, r.status, h.gender, h.fee_per_semester,
+                        (SELECT COUNT(*) FROM applications a WHERE a.room_id = r.room_id AND a.status = 'Approved') AS occupied
+                    FROM rooms r
+                    JOIN hostels h ON h.hostel_id = r.hostel_id
+                    WHERE r.room_id = ?");
+                $roomStmt->bind_param('i', $selectedRoom);
+                $roomStmt->execute();
+                $room = $roomStmt->get_result()->fetch_assoc();
+
+                if (!$room) {
+                    $errors[] = 'The selected room does not exist.';
+                } elseif ($room['status'] !== 'Available' || (int)$room['occupied'] >= (int)$room['capacity']) {
+                    $errors[] = 'That room is no longer available.';
+                } elseif (!eligible_for((string)$room['gender'], $gender)) {
+                    $errors[] = 'That hostel is not open to your gender.';
+                }
             }
 
             if ($errors) {
@@ -150,8 +169,8 @@ require __DIR__ . '/header.php';
 <?php foreach ($errors as $error): ?>
   <div class="alert alert-danger py-2" role="alert"><?= e($error) ?></div>
 <?php endforeach; ?>
-<?php if ($hasActive): ?>
-  <div class="alert alert-info">You already have an active application. Cancel it from your dashboard to apply for another room.</div>
+<?php if ($activeSemesters): ?>
+  <div class="alert alert-info">You have active applications for: <?= e(implode(', ', $activeSemesters)) ?>. You can apply again for a different semester.</div>
 <?php endif; ?>
 
 <form method="post" action="<?= e($formAction) ?>" class="row g-4" data-validate data-room-form novalidate>

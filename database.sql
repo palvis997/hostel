@@ -1,8 +1,7 @@
 -- Smart Campus Accommodation and Facility Management System
--- SPI 2301 | Kirinyaga University | Import this file with phpMyAdmin.
--- It drops and recreates every table, so importing it again resets the sample data.
-CREATE DATABASE IF NOT EXISTS smart_campus CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE smart_campus;
+-- SPI 2301 | Kirinyaga University.
+-- Select the target database before importing this file. It drops and recreates
+-- every table, so importing it again resets the sample data.
 
 DROP TABLE IF EXISTS maintenance_tickets;
 DROP TABLE IF EXISTS applications;

@@ -50,7 +50,12 @@ try {
             (SELECT COUNT(*) FROM rooms r WHERE r.hostel_id = h.hostel_id) AS total_rooms,
             (SELECT COALESCE(SUM(r.capacity), 0) FROM rooms r WHERE r.hostel_id = h.hostel_id) AS total_beds,
             (SELECT COUNT(*) FROM applications a JOIN rooms r ON r.room_id = a.room_id
-                WHERE r.hostel_id = h.hostel_id AND a.status = 'Approved') AS occupied
+                WHERE r.hostel_id = h.hostel_id AND a.status = 'Approved') AS occupied,
+            (SELECT COALESCE(SUM(CASE WHEN r.status = 'Available' THEN
+                    GREATEST(r.capacity - (SELECT COUNT(*) FROM applications a
+                        WHERE a.room_id = r.room_id AND a.status = 'Approved'), 0)
+                    ELSE 0 END), 0)
+                FROM rooms r WHERE r.hostel_id = h.hostel_id) AS free_beds
         FROM hostels h
         ORDER BY h.name")->fetch_all(MYSQLI_ASSOC);
 
@@ -88,11 +93,12 @@ try {
     exit('Could not generate the reports. Please try again later.');
 }
 
-$occTotals = ['rooms' => 0, 'beds' => 0, 'occupied' => 0];
+$occTotals = ['rooms' => 0, 'beds' => 0, 'occupied' => 0, 'free_beds' => 0];
 foreach ($occupancy as $row) {
     $occTotals['rooms'] += (int)$row['total_rooms'];
     $occTotals['beds'] += (int)$row['total_beds'];
     $occTotals['occupied'] += (int)$row['occupied'];
+    $occTotals['free_beds'] += (int)$row['free_beds'];
 }
 
 $finTotals = ['billed' => 0.0, 'collected' => 0.0, 'pending' => 0.0];
@@ -112,7 +118,7 @@ $chartData = [
     'occupancy' => [
         'labels'   => array_column($occupancy, 'name'),
         'occupied' => array_map(static fn(array $r): int => (int)$r['occupied'], $occupancy),
-        'free'     => array_map(static fn(array $r): int => max(0, (int)$r['total_beds'] - (int)$r['occupied']), $occupancy),
+        'free'     => array_map(static fn(array $r): int => (int)$r['free_beds'], $occupancy),
     ],
     'finance' => [round($finTotals['collected'], 2), round($finTotals['pending'], 2)],
     'maintenance' => [
@@ -245,7 +251,7 @@ require __DIR__ . '/header.php';
       <div class="col-lg-7 table-responsive">
         <table class="table table-bordered align-middle mb-0">
           <thead class="table-dark">
-            <tr><th>Hostel block</th><th class="text-end">Rooms</th><th class="text-end">Total beds</th><th class="text-end">Occupied</th><th class="text-end">Unoccupied</th><th class="text-end">Occupancy</th></tr>
+            <tr><th>Hostel block</th><th class="text-end">Rooms</th><th class="text-end">Total beds</th><th class="text-end">Occupied</th><th class="text-end">Free beds</th><th class="text-end">Occupancy</th></tr>
           </thead>
           <tbody>
             <?php foreach ($occupancy as $row): ?>
@@ -259,7 +265,7 @@ require __DIR__ . '/header.php';
                 <td class="text-end"><?= (int)$row['total_rooms'] ?></td>
                 <td class="text-end"><?= $beds ?></td>
                 <td class="text-end"><?= $occupied ?></td>
-                <td class="text-end"><?= max(0, $beds - $occupied) ?></td>
+                <td class="text-end"><?= (int)$row['free_beds'] ?></td>
                 <td class="text-end"><?= $percent ?>%</td>
               </tr>
             <?php endforeach; ?>
@@ -270,7 +276,7 @@ require __DIR__ . '/header.php';
               <td class="text-end"><?= $occTotals['rooms'] ?></td>
               <td class="text-end"><?= $occTotals['beds'] ?></td>
               <td class="text-end"><?= $occTotals['occupied'] ?></td>
-              <td class="text-end"><?= max(0, $occTotals['beds'] - $occTotals['occupied']) ?></td>
+              <td class="text-end"><?= $occTotals['free_beds'] ?></td>
               <td class="text-end"><?= $occTotals['beds'] > 0 ? (int)round($occTotals['occupied'] / $occTotals['beds'] * 100) : 0 ?>%</td>
             </tr>
           </tfoot>
